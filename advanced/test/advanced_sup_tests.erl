@@ -24,6 +24,33 @@ rest_for_one_test_() ->
       {{rest_for_one, 1, 5}, named_advanced_worker_restarted("rest_for_one_advanced_worker_restarted")},
       {{rest_for_one, 1, 5}, named_basic_sup_restarted("rest_for_one_basic_sup_restarted")}
      ]}.
+simple_one_for_one_test_() ->
+    {foreachx, fun(Args) -> strategy_setup(Args) end, fun(Args, Pid) -> strategy_cleanup(Args, Pid) end,
+     [     
+	   {{simple_one_for_one, 2, 5}, named_dynamic_worker_restarted("simple_one_for_one_dynamic_worker_restarted")}
+     ]}.
+
+named_dynamic_worker_restarted(Name) ->
+    fun(Args, Pid) -> (dynamic_worker_restarted(Name, Args))(Pid) end.
+dynamic_worker_restarted(Name, Args) ->	     
+    fun(Pid) ->
+	    {Name, fun() ->
+			   ?debugFmt("dynamic_worker_restarted for args ~p~n", [Args]),
+			   {ok, ChildPid1} = supervisor:start_child(Pid, []),
+			   {ok, ChildPid2} = supervisor:start_child(Pid, []),
+			   ?assertEqual(2, length(supervisor:which_children(Pid))),			   
+			   ?debugFmt("Supervisor children ~p~n", [supervisor:which_children(Pid)]),
+			   exit(ChildPid1, kill),
+			   timer:sleep(1000),
+			   ?assertEqual(2, length(supervisor:which_children(Pid))),
+			   ?debugFmt("Supervisor children ~p~n", [supervisor:which_children(Pid)]),			   
+			   exit(ChildPid2, kill),
+			   timer:sleep(1000),
+			   ?assertEqual(2, length(supervisor:which_children(Pid))),
+			   ?debugFmt("Supervisor children ~p~n", [supervisor:which_children(Pid)])
+		   end
+	    }
+    end.
 
 strategy_setup(Args) ->    
     ?debugFmt("setup for strategy ~p~n", [Args]),
