@@ -1,4 +1,4 @@
--module(basic_worker).
+-module(advanced_worker).
 -behaviour(gen_server).
 
 -export([start_link/0]).
@@ -23,7 +23,7 @@ free(Ch) ->
 %% Gen Server Functions
 %%====================================================================
 init(Args) ->
-    error_logger:info_msg("[basic_worker] starting with pid ~p and args ~p~n", [self(), Args]),
+    error_logger:info_msg("[advanced_worker] starting with pid ~p and args ~p~n", [self(), Args]),
     {ok, channels()}.
 
 handle_call(alloc, _From, Chs) ->    
@@ -44,7 +44,6 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 terminate(_Reason, _State) ->
-    error_logger:info_msg("[basic_worker] terminating"),
     ok.
 
 %%====================================================================

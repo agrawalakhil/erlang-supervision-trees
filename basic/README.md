@@ -1,9 +1,16 @@
 basic
 =====
 
-An OTP application
+An OTP application showing classic and basic supervisor 
 
 Build
 -----
 
-    $ rebar3 compile
+    $ rebar compile
+
+
+Test
+----
+
+    $ rebar eunit
+    

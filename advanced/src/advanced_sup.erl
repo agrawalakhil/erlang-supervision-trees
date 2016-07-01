@@ -1,14 +1,14 @@
 %%%-------------------------------------------------------------------
-%% @doc basic top level supervisor.
+%% @doc advanced top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 
--module(basic_sup).
+-module(advanced_sup).
 
 -behaviour(supervisor).
 
 %% API
--export([start_link/0, start_link/2]).
+-export([start_link/0, start_link/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -19,24 +19,32 @@
 %%====================================================================
 
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
-start_link(_Module, _Args) ->
-    start_link().
+    supervisor:start_link({local, ?SERVER}, ?MODULE, [{one_for_one, 1, 5}]).
+start_link({RestartStrategy, Intensity, Period}) ->
+    supervisor:start_link({local, ?SERVER}, ?MODULE, [{RestartStrategy, Intensity, Period}]).   
 
 %%====================================================================
 %% Supervisor callbacks
 %%====================================================================
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
-init(Args) ->
-    error_logger:info_msg("[basic_sup] starting with pid ~p and args ~p~n", [self(), Args]),
-    SupFlags = {one_for_one, 1, 5},
-    ChildSpecs = [{basic_worker_spec,
-                   {basic_worker, start_link, []},
+init(Args = [{RestartStrategy, Intensity, Period}]) ->
+    error_logger:info_msg("[advanced_sup] starting with pid ~p and args ~p~n", [self(), Args]),
+    SupFlags = {RestartStrategy, Intensity, Period},
+    ChildSpecs = [%% advanced_worker		  
+		  {advanced_worker_spec,
+                   {advanced_worker, start_link, []},
 		   permanent,
 		   brutal_kill,
 		   worker,
-		   [basic_worker]}],
+		   [advanced_worker]},
+		  %% basic_sup
+		  {basic_sup_spec,
+		   {basic_sup, start_link, []},
+		   permanent,
+		   brutal_kill,
+		   supervisor,
+		   [basic_sup, basic_worker]}],
     {ok, {SupFlags, ChildSpecs}}.
 
 %%====================================================================
